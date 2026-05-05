@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>3D Linear Transformations</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: #3ea0eb;
+    }
+    canvas {
+      background: white;
+      border: 2px solid rgb(0, 0, 0);
+      margin-top: 20px;
+    }
+    button {
+      margin: 8px;
+      padding: 10px 15px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>3D Linear Transformations Game</h1>
+<p>Use the buttons to apply matrix transformations to the cube.</p>
+
+<canvas id="canvas" width="700" height="500"></canvas>
+
+<br>
+
+<button onclick="scaleCube()">Scale</button>
+<button onclick="rotateCubeY()">Rotate Y-Axis</button>
+<button onclick="rotateCubeX()">Rotate X-Axis</button>
+<button onclick="reflectCube()">Reflect</button>
+<button onclick="resetCube()">Reset</button>
+
+<p id="matrixText">Current transformation: Identity Matrix</p>
+
+<script>
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+let vertices;
+let edges;
+
+function resetCube() {
+  vertices = [
+    [-1, -1, -1],
+    [ 1, -1, -1],
+    [ 1,  1, -1],
+    [-1,  1, -1],
+    [-1, -1,  1],
+    [ 1, -1,  1],
+    [ 1,  1,  1],
+    [-1,  1,  1]
+  ];
+
+  edges = [
+    [0,1], [1,2], [2,3], [3,0],
+    [4,5], [5,6], [6,7], [7,4],
+    [0,4], [1,5], [2,6], [3,7]
+  ];
+
+  document.getElementById("matrixText").innerText =
+    "Current transformation: Identity Matrix";
+  draw();
+}
+
+function multiplyMatrixVector(matrix, vector) {
+  return [
+    matrix[0][0] * vector[0] + matrix[0][1] * vector[1] + matrix[0][2] * vector[2],
+    matrix[1][0] * vector[0] + matrix[1][1] * vector[1] + matrix[1][2] * vector[2],
+    matrix[2][0] * vector[0] + matrix[2][1] * vector[1] + matrix[2][2] * vector[2]
+  ];
+}
+
+function transformCube(matrix, label) {
+  vertices = vertices.map(v => multiplyMatrixVector(matrix, v));
+  document.getElementById("matrixText").innerText = label;
+  draw();
+}
+
+function project3D(point) {
+  const distance = 5;
+  const scale = 120;
+  const z = point[2] + distance;
+
+  return [
+    canvas.width / 2 + (point[0] / z) * scale,
+    canvas.height / 2 - (point[1] / z) * scale
+  ];
+}
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = "black";
+
+  edges.forEach(edge => {
+    const p1 = project3D(vertices[edge[0]]);
+    const p2 = project3D(vertices[edge[1]]);
+
+    ctx.beginPath();
+    ctx.moveTo(p1[0], p1[1]);
+    ctx.lineTo(p2[0], p2[1]);
+    ctx.stroke();
+  });
+}
+
+function scaleCube() {
+  const matrix = [
+    [1.5, 0,   0],
+    [0,   1.0, 0],
+    [0,   0,   0.7]
+  ];
+
+  transformCube(matrix,
+    "Scaling Matrix: [[1.5, 0, 0], [0, 1, 0], [0, 0, 0.7]]"
+  );
+}
+
+function rotateCubeY() {
+  const angle = Math.PI / 6;
+
+  const matrix = [
+    [Math.cos(angle), 0, Math.sin(angle)],
+    [0,               1, 0],
+    [-Math.sin(angle),0, Math.cos(angle)]
+  ];
+
+  transformCube(matrix,
+    "Rotation around Y-axis Matrix"
+  );
+}
+
+function rotateCubeX() {
+  const angle = Math.PI / 6;
+
+  const matrix = [
+    [1, 0,                0],
+    [0, Math.cos(angle), -Math.sin(angle)],
+    [0, Math.sin(angle),  Math.cos(angle)]
+  ];
+
+  transformCube(matrix,
+    "Rotation around X-axis Matrix"
+  );
+}
+
+function reflectCube() {
+  const matrix = [
+    [1, 0,  0],
+    [0, -1, 0],
+    [0, 0,  1]
+  ];
+
+  transformCube(matrix,
+    "Reflection Matrix across the XZ-plane: [[1,0,0],[0,-1,0],[0,0,1]]"
+  );
+}
+
+resetCube();
+</script>
+
+</body>
+</html>
